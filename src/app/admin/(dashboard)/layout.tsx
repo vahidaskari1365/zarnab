@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
 import { AdminNav } from "./admin-nav";
@@ -17,11 +18,11 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         <div className="flex w-full items-center justify-between gap-2 overflow-x-auto no-scrollbar lg:hidden">
           <span className="font-display text-lg tracking-[0.25em] text-ivory">ZARNAB ADMIN</span>
           <div className="flex shrink-0 items-center gap-1.5">
-            <a href="/admin/products" className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] text-ivory">محصولات</a>
-            <a href="/admin/orders" className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] text-ivory">سفارش‌ها</a>
-            <a href="/admin/leads" className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] text-ivory">درخواست‌ها</a>
-            <a href="/admin/seo" className="rounded-full bg-gold px-3 py-1.5 text-[10px] text-white">سئو</a>
-            <a href="/" className="rounded-full border border-white/20 px-3 py-1.5 text-[10px] text-ivory">سایت</a>
+            <Link href="/admin/products" className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] text-ivory">محصولات</Link>
+            <Link href="/admin/orders" className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] text-ivory">سفارش‌ها</Link>
+            <Link href="/admin/leads" className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] text-ivory">درخواست‌ها</Link>
+            <Link href="/admin/seo" className="rounded-full bg-gold px-3 py-1.5 text-[10px] text-white">سئو</Link>
+            <Link href="/" className="rounded-full border border-white/20 px-3 py-1.5 text-[10px] text-ivory">سایت</Link>
           </div>
         </div>
       </aside>

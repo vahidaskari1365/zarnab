@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  startTransition,
   useCallback,
   useContext,
   useEffect,
@@ -44,12 +45,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed: unknown = JSON.parse(raw);
-        if (Array.isArray(parsed)) setItems(parsed as CartItem[]);
+        if (Array.isArray(parsed)) {
+          const restored = parsed as CartItem[];
+          startTransition(() => setItems(restored));
+        }
       }
     } catch {
       // ignore malformed storage
     }
-    setReady(true);
+    startTransition(() => setReady(true));
   }, []);
 
   useEffect(() => {

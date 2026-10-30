@@ -9,6 +9,7 @@ import { Testimonials } from "@/components/testimonials";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { SmartAdvisor } from "@/components/smart-advisor";
 import { GoldTicker, Counter } from "@/components/motion-bits";
+import { GOLD } from "@/lib/catalog";
 import {
   IconArrow,
   IconChevron,
@@ -107,6 +108,10 @@ export default async function HomePage() {
           <div className="absolute -right-32 -top-40 size-[38rem] rounded-full bg-gold-pale/70 blur-3xl" />
           <div className="absolute -left-24 top-32 size-[28rem] rounded-full bg-[#cfe3d8]/50 blur-3xl" />
           <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-cream/80 to-transparent" />
+          <span className="firefly right-[12%] top-[18%] size-3" style={{ animationDelay: "0s" }} />
+          <span className="firefly right-[38%] top-[52%] size-2" style={{ animationDelay: "2.4s" }} />
+          <span className="firefly left-[14%] top-[30%] size-3.5" style={{ animationDelay: "4.2s" }} />
+          <span className="firefly left-[42%] top-[12%] size-2" style={{ animationDelay: "6.1s" }} />
         </div>
 
         <div className="container-x relative grid items-center gap-14 pb-16 pt-12 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:pb-24 lg:pt-20">
@@ -223,8 +228,12 @@ export default async function HomePage() {
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-cream">
                 <div className="h-full w-[72%] rounded-full bg-gradient-to-l from-gold-deep to-gold-light" />
               </div>
-              <p className="mt-2 flex items-center gap-1 text-[10px] text-emerald-700">
-                <IconTrend className="size-3" /> به‌روزرسانی زندهٔ گالری
+              <p className="mt-2 flex items-center justify-between text-[10px]">
+                <span className={GOLD.changeDay18 >= 0 ? "flex items-center gap-1 text-emerald-700" : "flex items-center gap-1 text-rose-600"}>
+                  <IconTrend className="size-3" />
+                  {GOLD.changeDay18 >= 0 ? "▲" : "▼"} {toPersianDigits(Math.abs(GOLD.changeDay18).toFixed(2))}٪ امروز
+                </span>
+                <span className="text-muted">{GOLD.updatedAt}</span>
               </p>
             </div>
           </div>
@@ -232,7 +241,12 @@ export default async function HomePage() {
 
         <div className="relative bg-forest-deep">
           <div className="container-x flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <GoldTicker price={goldPrice} />
+            <GoldTicker
+              price={goldPrice}
+              coinEmami={GOLD.coinEmami}
+              ounceUsd={GOLD.ounceUsd.toLocaleString("en-US")}
+              change={GOLD.changeDay18}
+            />
             <Link href="/collections/bullion" className="text-[11px] text-gold-light underline-offset-4 hover:underline">
               مشاهدهٔ نرخ سکه و شمش ←
             </Link>
@@ -477,19 +491,29 @@ export default async function HomePage() {
                 </div>
               </div>
               <div className="grid gap-3 rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur">
-                <p className="text-xs font-bold text-gold-light">نرخ مرجع امروز</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-bold text-gold-light">نرخ لحظه‌ای بازار طلا</p>
+                  <span className="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] text-gold-light">
+                    {GOLD.updatedAt}
+                  </span>
+                </div>
                 {[
-                  { label: "طلای ۱۸ عیار / گرم", value: `${formatToman(goldPrice)} تومان` },
-                  { label: "سکه تمام بهار آزادی", value: `${formatToman(78500000)} تومان` },
-                  { label: "شمش ۵ گرمی", value: `${formatToman(34800000)} تومان` },
+                  { label: "طلای ۱۸ عیار / گرم", value: GOLD.gram18 },
+                  { label: "مثقال (مظنه)", value: GOLD.mesghal },
+                  { label: "سکه امامی", value: GOLD.coinEmami },
+                  { label: "سکه بهار آزادی", value: GOLD.coinBahar },
+                  { label: "نیم‌سکه", value: GOLD.coinHalf },
+                  { label: "ربع سکه", value: GOLD.coinQuarter },
                 ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between gap-3 border-b border-white/10 pb-3 last:border-0 last:pb-0">
+                  <div key={row.label} className="flex items-center justify-between gap-3 border-b border-white/10 pb-2.5 last:border-0 last:pb-0">
                     <span className="text-[11px] text-ivory/65">{row.label}</span>
-                    <span className="text-xs font-bold text-ivory">{row.value}</span>
+                    <span className="text-xs font-bold text-gold-light">
+                      {formatToman(row.value)} <span className="text-[9px] font-normal text-ivory/50">تومان</span>
+                    </span>
                   </div>
                 ))}
                 <p className="text-[10px] leading-5 text-ivory/40">
-                  نرخ‌ها مرجع هستند و در لحظهٔ ثبت سفارش تایید می‌شوند. اجرت و مالیات در فاکتور شفاف است.
+                  {GOLD.source} · نرخ‌ها مرجع هستند و در لحظهٔ ثبت سفارش تایید می‌شوند. اجرت و مالیات در فاکتور شفاف است.
                 </p>
               </div>
             </div>

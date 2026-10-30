@@ -17,7 +17,7 @@ export const site = {
   instagram: "https://instagram.com/zarnab",
   whatsapp: "https://wa.me/982191000884",
   hours: "شنبه تا پنجشنبه ۱۰ تا ۲۰",
-  goldPrice18: 6450000,
+  goldPrice18: 26_220_000,
   currency: "IRT",
 } as const;
 

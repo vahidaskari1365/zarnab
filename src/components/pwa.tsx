@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { IconClose, IconSparkle } from "./icons";
 
@@ -42,7 +42,7 @@ export function PwaProvider() {
 
     const ua = window.navigator.userAgent;
     const iosDevice = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && "ontouchend" in document);
-    setIsIos(iosDevice);
+    startTransition(() => setIsIos(iosDevice));
 
     let dismissed = false;
     try {

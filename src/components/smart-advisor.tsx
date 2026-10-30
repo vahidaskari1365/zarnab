@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { Product } from "@/db/schema";
+import type { Product } from "@/lib/catalog";
 import { formatToman } from "@/lib/site";
 import { IconArrow, IconBrain, IconClose, IconSparkle } from "./icons";
 

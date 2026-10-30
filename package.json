@@ -6,7 +6,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:push": "echo 'Demo mode: no database required.'"
   },
   "dependencies": {
     "dotenv": "17.3.1",

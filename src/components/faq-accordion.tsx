@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Faq } from "@/db/schema";
+import type { Faq } from "@/lib/catalog";
 import { IconChevron } from "./icons";
 
 export function FaqAccordion({ items }: { items: Faq[] }) {

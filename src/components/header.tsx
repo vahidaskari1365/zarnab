@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
 import { navigation, site, toPersianDigits } from "@/lib/site";
 import {
@@ -15,7 +15,7 @@ import {
   IconWhatsapp,
 } from "./icons";
 
-export function Header({ announcement }: { announcement?: string }) {
+export function Header({ announcement, rates = [] }: { announcement?: string; rates?: string[] }) {
   const pathname = usePathname();
   const router = useRouter();
   const { count, lastAdded } = useCart();
@@ -32,8 +32,10 @@ export function Header({ announcement }: { announcement?: string }) {
   }, []);
 
   useEffect(() => {
-    setMenuOpen(false);
-    setSearchOpen(false);
+    startTransition(() => {
+      setMenuOpen(false);
+      setSearchOpen(false);
+    });
   }, [pathname]);
 
   useEffect(() => {
@@ -53,18 +55,23 @@ export function Header({ announcement }: { announcement?: string }) {
   return (
     <>
       <div className="relative z-50 bg-forest-deep text-gold-pale">
-        <div className="container-x flex h-9 items-center justify-between gap-4 text-[11px]">
-          <div className="flex items-center gap-4 overflow-hidden">
-            <span className="hidden items-center gap-1.5 sm:flex">
-              <IconSparkle className="size-3.5 text-gold-light" />
-              <span>طلای ۱۸ عیار، ضمانت اصالت و بازخرید</span>
-            </span>
-            <span className="hidden h-3 w-px bg-white/20 md:block" />
-            <span className="truncate text-gold-light/90">
-              {announcement || "ارسال بیمه‌شدهٔ رایگان بالای ۳۰ میلیون تومان"}
-            </span>
+        <div className="container-x flex h-9 items-center gap-4 text-[11px]">
+          <div className="marquee relative min-w-0 flex-1 overflow-hidden" aria-hidden={false}>
+            <div className="marquee-track">
+              {[...rates, ...rates].map((rate, index) => (
+                <span
+                  key={index}
+                  style={{ paddingInlineEnd: "2.5rem" }}
+                  className={index % 2 === 0 ? "whitespace-nowrap text-gold-light" : "whitespace-nowrap text-ivory/60"}
+                >
+                  {rate || announcement || "ارسال بیمه‌شدهٔ رایگان بالای ۳۰ میلیون تومان"}
+                </span>
+              ))}
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-forest-deep to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-forest-deep to-transparent" />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex shrink-0 items-center gap-4">
             <a href={`tel:${site.phoneHref}`} className="flex items-center gap-1.5 hover:text-white">
               <IconPhone className="size-3.5" />
               <span className="hidden sm:inline">{site.phone}</span>

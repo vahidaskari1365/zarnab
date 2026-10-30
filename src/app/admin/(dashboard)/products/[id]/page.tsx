@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { products } from "@/db/schema";
-import { getCategories } from "@/lib/data";
+import { getCategories, getProductById } from "@/lib/data";
 import { ProductForm } from "../product-form";
 
 export const dynamic = "force-dynamic";
@@ -15,12 +12,11 @@ export default async function EditProductPage({ params }: { params: Params }) {
   const productId = Number(id);
   if (!Number.isFinite(productId)) notFound();
 
-  const [rows, categories] = await Promise.all([
-    db.select().from(products).where(eq(products.id, productId)).limit(1),
+  const [product, categories] = await Promise.all([
+    getProductById(productId),
     getCategories(),
   ]);
 
-  const product = rows[0];
   if (!product) notFound();
 
   return (
@@ -29,7 +25,7 @@ export default async function EditProductPage({ params }: { params: Params }) {
         <div>
           <Link href="/admin/products" className="text-[11px] text-gold-deep">← بازگشت به محصولات</Link>
           <h1 className="mt-2 text-2xl font-extrabold text-ink">ویرایش {product.name}</h1>
-          <p className="mt-1 text-xs text-muted">آخرین تغییرات پس از ذخیره، در سایت اعمال می‌شود.</p>
+          <p className="mt-1 text-xs text-muted">حالت نمایشی: تغییرات فقط به‌صورت موقت شبیه‌سازی می‌شود.</p>
         </div>
         <Link href={`/products/${product.slug}`} className="btn btn-outline !px-4 !py-2.5 text-xs">
           مشاهدهٔ صفحهٔ محصول

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Product } from "@/db/schema";
+import type { Product } from "@/lib/catalog";
 import { discountPercent, formatToman, site } from "@/lib/site";
 import { AddToCartButton } from "./add-to-cart";
 import { IconGem, IconScale, IconStar } from "./icons";
@@ -9,7 +9,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const image = product.images[0] ?? "/images/necklace.jpg";
 
   return (
-    <article className="group card-lux tilt-card relative overflow-hidden rounded-[1.5rem]">
+    <article className="group card-lux tilt-card lux-glow relative overflow-hidden rounded-[1.5rem]">
       <div className="relative overflow-hidden">
         <Link href={`/products/${product.slug}`} className="block">
           <div className="zoom-media relative aspect-[4/5] overflow-hidden bg-cream">

@@ -1,15 +1,13 @@
-import { and, asc, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
-import { db } from "@/db";
 import {
-  categories,
-  faqs,
-  keywords,
-  leads,
-  orders,
-  posts,
-  products,
-  settings,
-  subscribers,
+  CATEGORIES,
+  DEMO_LEADS,
+  DEMO_ORDERS,
+  DEMO_SUBSCRIBERS,
+  FAQS,
+  KEYWORDS,
+  POSTS,
+  PRODUCTS,
+  SETTINGS,
   type Category,
   type Faq,
   type Keyword,
@@ -17,16 +15,8 @@ import {
   type Order,
   type Post,
   type Product,
-} from "@/db/schema";
-
-async function safe<T>(operation: () => Promise<T>, fallback: T): Promise<T> {
-  try {
-    return await operation();
-  } catch (error) {
-    console.error("database query failed", error);
-    return fallback;
-  }
-}
+  type Subscriber,
+} from "@/lib/catalog";
 
 export type ProductQuery = {
   category?: string;
@@ -38,136 +28,105 @@ export type ProductQuery = {
   maxPrice?: number;
 };
 
-export function getCategories(): Promise<Category[]> {
-  return safe(
-    () => db.select().from(categories).orderBy(asc(categories.sortOrder)),
-    [],
-  );
+/** همهٔ داده‌ها از کاتالوگ دمو خوانده می‌شوند — بدون دیتابیس. */
+
+export async function getCategories(): Promise<Category[]> {
+  return [...CATEGORIES].sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
-export function getProducts(query: ProductQuery = {}): Promise<Product[]> {
-  return safe(async () => {
-    const filters = [];
-    if (query.category) filters.push(eq(products.categorySlug, query.category));
-    if (query.featured) filters.push(eq(products.featured, true));
-    if (query.q) {
-      const term = `%${query.q}%`;
-      filters.push(
-        or(
-          ilike(products.name, term),
-          ilike(products.subtitle, term),
-          ilike(products.description, term),
-          ilike(products.stone, term),
-        ),
-      );
-    }
-    if (typeof query.minPrice === "number") filters.push(sql`${products.price} >= ${query.minPrice}`);
-    if (typeof query.maxPrice === "number") filters.push(sql`${products.price} <= ${query.maxPrice}`);
+export async function getProducts(query: ProductQuery = {}): Promise<Product[]> {
+  let items = [...PRODUCTS];
 
-    const orderBy =
-      query.sort === "price-asc"
-        ? asc(products.price)
-        : query.sort === "price-desc"
-          ? desc(products.price)
-          : query.sort === "weight"
-            ? desc(products.weightGrams)
-            : query.sort === "newest"
-              ? desc(products.createdAt)
-              : desc(products.featured);
+  if (query.category) items = items.filter((item) => item.categorySlug === query.category);
+  if (query.featured) items = items.filter((item) => item.featured);
+  if (query.q) {
+    const term = query.q.trim().toLowerCase();
+    items = items.filter((item) =>
+      [item.name, item.subtitle, item.description, item.stone]
+        .some((field) => field.toLowerCase().includes(term)),
+    );
+  }
+  if (typeof query.minPrice === "number") items = items.filter((item) => item.price >= query.minPrice!);
+  if (typeof query.maxPrice === "number") items = items.filter((item) => item.price <= query.maxPrice!);
 
-    return db
-      .select()
-      .from(products)
-      .where(filters.length ? and(...filters) : undefined)
-      .orderBy(orderBy, asc(products.id))
-      .limit(query.limit ?? 60);
-  }, []);
+  switch (query.sort) {
+    case "price-asc":
+      items.sort((a, b) => a.price - b.price);
+      break;
+    case "price-desc":
+      items.sort((a, b) => b.price - a.price);
+      break;
+    case "weight":
+      items.sort((a, b) => b.weightGrams - a.weightGrams);
+      break;
+    case "newest":
+      items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      break;
+    default:
+      items.sort((a, b) => Number(b.featured) - Number(a.featured) || a.id - b.id);
+  }
+
+  return items.slice(0, query.limit ?? 60);
 }
 
-export function getProductBySlug(slug: string): Promise<Product | null> {
-  return safe(async () => {
-    const rows = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
-    return rows[0] ?? null;
-  }, null);
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  return PRODUCTS.find((product) => product.slug === slug) ?? null;
 }
 
-export function getRelatedProducts(categorySlug: string, slug: string): Promise<Product[]> {
-  return safe(
-    () =>
-      db
-        .select()
-        .from(products)
-        .where(and(eq(products.categorySlug, categorySlug), ne(products.slug, slug)))
-        .limit(4),
-    [],
-  );
+export async function getProductById(id: number): Promise<Product | null> {
+  return PRODUCTS.find((product) => product.id === id) ?? null;
 }
 
-export function getCategoryBySlug(slug: string): Promise<Category | null> {
-  return safe(async () => {
-    const rows = await db.select().from(categories).where(eq(categories.slug, slug)).limit(1);
-    return rows[0] ?? null;
-  }, null);
+export async function getRelatedProducts(categorySlug: string, slug: string): Promise<Product[]> {
+  return PRODUCTS.filter((product) => product.categorySlug === categorySlug && product.slug !== slug).slice(0, 4);
 }
 
-export function getPosts(limit = 12): Promise<Post[]> {
-  return safe(
-    () => db.select().from(posts).orderBy(desc(posts.publishedAt)).limit(limit),
-    [],
-  );
+export async function getCategoryBySlug(slug: string): Promise<Category | null> {
+  return CATEGORIES.find((category) => category.slug === slug) ?? null;
 }
 
-export function getPostBySlug(slug: string): Promise<Post | null> {
-  return safe(async () => {
-    const rows = await db.select().from(posts).where(eq(posts.slug, slug)).limit(1);
-    return rows[0] ?? null;
-  }, null);
+export async function getPosts(limit = 12): Promise<Post[]> {
+  return [...POSTS]
+    .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+    .slice(0, limit);
 }
 
-export function getFaqs(): Promise<Faq[]> {
-  return safe(() => db.select().from(faqs).orderBy(asc(faqs.sortOrder)), []);
+export async function getPostBySlug(slug: string): Promise<Post | null> {
+  return POSTS.find((post) => post.slug === slug) ?? null;
 }
 
-export function getSettings(): Promise<Record<string, string>> {
-  return safe(async () => {
-    const rows = await db.select().from(settings);
-    return Object.fromEntries(rows.map((row) => [row.key, row.value]));
-  }, {});
+export async function getFaqs(): Promise<Faq[]> {
+  return [...FAQS].sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
-export function getKeywords(): Promise<Keyword[]> {
-  return safe(
-    () => db.select().from(keywords).orderBy(asc(keywords.position)),
-    [],
-  );
+export async function getSettings(): Promise<Record<string, string>> {
+  return { ...SETTINGS };
 }
 
-export function getOrders(limit = 60): Promise<Order[]> {
-  return safe(
-    () => db.select().from(orders).orderBy(desc(orders.createdAt)).limit(limit),
-    [],
-  );
+export async function getKeywords(): Promise<Keyword[]> {
+  return [...KEYWORDS].sort((a, b) => a.id - b.id);
 }
 
-export function getLeads(limit = 60): Promise<Lead[]> {
-  return safe(
-    () => db.select().from(leads).orderBy(desc(leads.createdAt)).limit(limit),
-    [],
-  );
+export async function getOrders(limit = 60): Promise<Order[]> {
+  return [...DEMO_ORDERS]
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, limit);
 }
 
-export function getSubscribers(limit = 60): Promise<{ id: number; email: string; createdAt: Date }[]> {
-  return safe(
-    () => db.select().from(subscribers).orderBy(desc(subscribers.createdAt)).limit(limit),
-    [],
-  );
+export async function getLeads(limit = 60): Promise<Lead[]> {
+  return [...DEMO_LEADS]
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, limit);
 }
 
-export function getOrderByNumber(orderNumber: string): Promise<Order | null> {
-  return safe(async () => {
-    const rows = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
-    return rows[0] ?? null;
-  }, null);
+export async function getSubscribers(limit = 60): Promise<Subscriber[]> {
+  return [...DEMO_SUBSCRIBERS]
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, limit);
+}
+
+export async function getOrderByNumber(orderNumber: string): Promise<Order | null> {
+  return DEMO_ORDERS.find((order) => order.orderNumber === orderNumber) ?? null;
 }
 
 export type DashboardStats = {
@@ -183,41 +142,21 @@ export type DashboardStats = {
 };
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  return safe(
-    async () => {
-      const [orderRows, leadRows, productRows] = await Promise.all([
-        db.select().from(orders),
-        db.select().from(leads),
-        db.select().from(products),
-      ]);
-      const subscriberRows = await db.select().from(subscribers);
-      const revenue = orderRows
-        .filter((order) => order.status !== "cancelled")
-        .reduce((sum, order) => sum + order.total, 0);
-      return {
-        revenue,
-        orderCount: orderRows.length,
-        pendingOrders: orderRows.filter((order) => order.status === "pending").length,
-        leadCount: leadRows.length,
-        newLeads: leadRows.filter((lead) => lead.status === "new").length,
-        productCount: productRows.length,
-        lowStock: productRows.filter((product) => product.stock <= 3).length,
-        subscriberCount: subscriberRows.length,
-        avgOrder: orderRows.length ? Math.round(revenue / orderRows.length) : 0,
-      };
-    },
-    {
-      revenue: 0,
-      orderCount: 0,
-      pendingOrders: 0,
-      leadCount: 0,
-      newLeads: 0,
-      productCount: 0,
-      lowStock: 0,
-      subscriberCount: 0,
-      avgOrder: 0,
-    },
-  );
+  const orderRows = DEMO_ORDERS;
+  const revenue = orderRows
+    .filter((order) => order.status !== "cancelled")
+    .reduce((sum, order) => sum + order.total, 0);
+  return {
+    revenue,
+    orderCount: orderRows.length,
+    pendingOrders: orderRows.filter((order) => order.status === "pending").length,
+    leadCount: DEMO_LEADS.length,
+    newLeads: DEMO_LEADS.filter((lead) => lead.status === "new").length,
+    productCount: PRODUCTS.length,
+    lowStock: PRODUCTS.filter((product) => product.stock <= 3).length,
+    subscriberCount: DEMO_SUBSCRIBERS.length,
+    avgOrder: orderRows.length ? Math.round(revenue / orderRows.length) : 0,
+  };
 }
 
-export type { Category, Faq, Keyword, Lead, Order, Post, Product };
+export type { Category, Faq, Keyword, Lead, Order, Post, Product, Subscriber };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { toPersianDigits } from "@/lib/site";
 
 export function ScrollProgress() {
@@ -48,8 +48,8 @@ export function Counter({
   useEffect(() => {
     const node = ref.current;
     if (!node || typeof IntersectionObserver === "undefined") {
-      setDisplay(value);
-      return;
+      const fallback = requestAnimationFrame(() => setStarted(true));
+      return () => cancelAnimationFrame(fallback);
     }
     const observer = new IntersectionObserver(
       (entries) => {
@@ -93,23 +93,27 @@ export function Counter({
   );
 }
 
-export function GoldTicker({ price }: { price: number }) {
+export function GoldTicker({
+  price,
+  coinEmami = 264_500_000,
+  ounceUsd = "3,342",
+  change = -4.45,
+}: {
+  price: number;
+  coinEmami?: number;
+  ounceUsd?: string;
+  change?: number;
+}) {
   const [tick, setTick] = useState(0);
-  const [change, setChange] = useState(0.42);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
       setTick((current) => current + 1);
-      setChange((current) => {
-        const next = current + (Math.random() - 0.5) * 0.22;
-        return Math.round(next * 100) / 100;
-      });
     }, 6000);
     return () => window.clearInterval(timer);
   }, []);
 
-  const unit = price / 1000;
-  const live = unit + tick * 1.2;
+  const live = price + tick * 1200;
   const pos = change >= 0;
 
   return (
@@ -122,13 +126,14 @@ export function GoldTicker({ price }: { price: number }) {
         نرخ زندهٔ طلای ۱۸ عیار
       </span>
       <span className="font-bold text-gold-light">
-        {new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 }).format(live * 1000)} تومان / گرم
+        {new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 }).format(live)} تومان / گرم
       </span>
       <span className={pos ? "text-emerald-300" : "text-rose-300"}>
         {pos ? "▲" : "▼"} {toPersianDigits(Math.abs(change).toFixed(2))}٪ امروز
       </span>
       <span className="hidden text-ivory/40 sm:inline">
-        انس جهانی: {toPersianDigits("3,342")} دلار · سکه امامی: {toPersianDigits("78,500,000")} تومان
+        انس جهانی: {toPersianDigits(ounceUsd)} دلار · سکه امامی:{" "}
+        {new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 }).format(coinEmami)} تومان
       </span>
     </div>
   );

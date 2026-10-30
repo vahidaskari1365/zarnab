@@ -51,8 +51,10 @@ export default async function AdminSeoPage({ searchParams }: { searchParams: Sea
       </div>
 
       {params.saved && (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
-          تنظیمات سئو و محتوای صفحهٔ اصلی ذخیره شد.
+        <p className="rounded-xl border border-gold/40 bg-gold-pale/60 p-3 text-xs text-gold-deep">
+          {params.saved === "demo"
+            ? "حالت نمایشی: ذخیرهٔ دائمی تنظیمات غیرفعال است."
+            : "تنظیمات سئو و محتوای صفحهٔ اصلی ذخیره شد."}
         </p>
       )}
 

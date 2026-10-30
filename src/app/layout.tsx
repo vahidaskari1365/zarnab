@@ -5,7 +5,8 @@ import { CartProvider } from "@/lib/cart";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { ScrollProgress } from "@/components/motion-bits";
-import { site } from "@/lib/site";
+import { site, formatToman, toPersianDigits } from "@/lib/site";
+import { GOLD } from "@/lib/catalog";
 import { getSettings } from "@/lib/data";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { PwaProvider } from "@/components/pwa";
@@ -169,6 +170,18 @@ const websiteJsonLd = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const settings = await getSettings();
+
+  const goldRates = [
+    `گرم ۱۸ عیار: ${formatToman(GOLD.gram18)} تومان`,
+    `مظنه: ${formatToman(GOLD.mesghal)} تومان`,
+    `سکه امامی: ${formatToman(GOLD.coinEmami)} تومان`,
+    `سکه بهار آزادی: ${formatToman(GOLD.coinBahar)} تومان`,
+    `نیم‌سکه: ${formatToman(GOLD.coinHalf)} تومان`,
+    `ربع سکه: ${formatToman(GOLD.coinQuarter)} تومان`,
+    `انس جهانی: ${toPersianDigits(GOLD.ounceUsd.toLocaleString("en-US"))} دلار`,
+    `به‌روزرسانی: ${GOLD.updatedAt} — ${GOLD.source}`,
+  ];
+
   return (
     <html lang="fa" dir="rtl">
       <head>
@@ -204,7 +217,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             رفتن به محتوای اصلی
           </a>
           <ScrollProgress />
-          <Header announcement={settings.announcement} />
+          <Header announcement={settings.announcement} rates={goldRates} />
           <div className="pb-[calc(4.35rem+env(safe-area-inset-bottom))] lg:pb-0">
             <main id="main">{children}</main>
             <Footer />

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { leads } from "@/db/schema";
 
+/** حالت نمایشی: سرنخ‌ها اعتبارسنجی و لاگ می‌شوند (بدون دیتابیس). */
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -19,14 +18,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, message: "شمارهٔ موبایل معتبر نیست." }, { status: 400 });
     }
 
-    await db.insert(leads).values({
-      name,
-      phone,
-      email: email.slice(0, 160),
-      topic: topic.slice(0, 120),
-      message: message.slice(0, 2000),
-      source: source.slice(0, 60),
-    });
+    console.log("[demo-lead]", name, phone, email, topic, message.slice(0, 120));
 
     return NextResponse.json({
       ok: true,

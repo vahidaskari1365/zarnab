@@ -1,4 +1,4 @@
-import type { Category, Product } from "@/db/schema";
+import type { Category, Product } from "@/lib/catalog";
 import { saveProductAction } from "../../actions";
 import Link from "next/link";
 

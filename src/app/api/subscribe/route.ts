@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { subscribers } from "@/db/schema";
 
+/** حالت نمایشی: عضویت خبرنامه اعتبارسنجی و لاگ می‌شود (بدون دیتابیس). */
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -9,7 +8,7 @@ export async function POST(request: Request) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       return NextResponse.json({ ok: false, message: "ایمیل معتبر نیست." }, { status: 400 });
     }
-    await db.insert(subscribers).values({ email }).onConflictDoNothing();
+    console.log("[demo-subscriber]", email);
     return NextResponse.json({ ok: true, message: "عضویت شما در خبرنامهٔ زرناب ثبت شد." });
   } catch (error) {
     console.error("subscribe failed", error);

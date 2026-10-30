@@ -25,8 +25,10 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
       </div>
 
       {params.saved && (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
-          تغییرات محصول با موفقیت ذخیره شد.
+        <p className="rounded-xl border border-gold/40 bg-gold-pale/60 p-3 text-xs text-gold-deep">
+          {params.saved === "demo"
+            ? "حالت نمایشی: ذخیرهٔ دائمی محصول غیرفعال است و داده‌ها از کاتالوگ دمو خوانده می‌شوند."
+            : "تغییرات محصول با موفقیت ذخیره شد."}
         </p>
       )}
       {params.error && (

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { inArray } from "drizzle-orm";
-import { db } from "@/db";
-import { orders, products } from "@/db/schema";
+import { PRODUCTS } from "@/lib/catalog";
 
 type IncomingItem = { slug?: unknown; quantity?: unknown };
 
+/**
+ * حالت نمایشی: سفارش اعتبارسنجی و ثبت موقت می‌شود (بدون دیتابیس).
+ * پاسخ همان ساختار قبل را دارد تا تجربهٔ کاربر تغییر نکند.
+ */
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -30,16 +32,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, message: "سبد خرید خالی است." }, { status: 400 });
     }
 
-    const slugs = rawItems
-      .map((item) => String(item.slug ?? ""))
-      .filter((slug) => slug.length > 0)
-      .slice(0, 20);
-
-    const rows = await db.select().from(products).where(inArray(products.slug, slugs));
-    if (rows.length === 0) {
-      return NextResponse.json({ ok: false, message: "محصولات سبد خرید معتبر نیستند." }, { status: 400 });
-    }
-
     type OrderItemDraft = {
       slug: string;
       name: string;
@@ -51,7 +43,7 @@ export async function POST(request: Request) {
 
     const items = rawItems
       .map<OrderItemDraft | null>((item) => {
-        const product = rows.find((row) => row.slug === String(item.slug));
+        const product = PRODUCTS.find((row) => row.slug === String(item.slug));
         if (!product) return null;
         const quantity = Math.max(1, Math.min(10, Number(item.quantity) || 1));
         return {
@@ -65,22 +57,14 @@ export async function POST(request: Request) {
       })
       .filter((item): item is OrderItemDraft => item !== null);
 
+    if (items.length === 0) {
+      return NextResponse.json({ ok: false, message: "محصولات سبد خرید معتبر نیستند." }, { status: 400 });
+    }
+
     const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const orderNumber = `ZR-${Date.now().toString(36).toUpperCase().slice(-6)}${Math.floor(Math.random() * 90 + 10)}`;
 
-    await db.insert(orders).values({
-      orderNumber,
-      customerName,
-      phone,
-      email,
-      city,
-      address,
-      note,
-      paymentMethod,
-      items,
-      total,
-      status: "pending",
-    });
+    console.log("[demo-order]", orderNumber, customerName, phone, total, JSON.stringify(items));
 
     return NextResponse.json({
       ok: true,
